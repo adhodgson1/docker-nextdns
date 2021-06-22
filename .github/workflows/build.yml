@@ -17,20 +17,14 @@ jobs:
         run: |
           echo ::set-output name=release_tag::$(curl -sL https://api.github.com/repos/nextdns/nextdns/releases/latest | jq -r ".tag_name")
           echo ::set-output name=current_tag::$(curl -sL https://api.github.com/repos/adhodgson1/docker-nextdns/releases/latest | jq -r ".tag_name")
-          echo ::set-output name=nextdns-version::$(echo ${{ release_tag }} | sed 's/v//')
-      - name: Push Tag
-        if: steps.nextdns-cli.outputs.current_tag != steps.nextdns-cli.outputs.release_tag
-        uses: mathieudutour/github-tag-action@v5.5
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{ steps.nextdns-cli.outputs.release_tag }}
+          echo ::set-output name=nextdns_version::$(curl -sL https://api.github.com/repos/nextdns/nextdns/releases/latest | jq -r ".tag_name" | sed 's/v//')
       - name: Create a GitHub release
         if: steps.nextdns-cli.outputs.current_tag != steps.nextdns-cli.outputs.release_tag
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.nextdns-cli.outputs.release_tag }}
+          tag_name: ${{ steps.nextdns-cli.outputs.nextdns_version }}
           release_name: Release ${{ steps.nextdns-cli.outputs.release_tag }}
           body: Upgrade NextDNS CLI to ${{ steps.nextdns-cli.outputs.release_tag }}
 
@@ -54,4 +48,4 @@ jobs:
           build-args: |
             NEXTDNS_VERSION: ${{ env.NEXTDNS_VERSION }}
           push: true
-          tags: ${{ env.IMAGE_NAME }}/latest, ${{ env.IMAGE_NAME }}/${{ env.NEXTDNS_VERSION }}
+          tags: ${{ env.IMAGE_NAME }}:latest, ${{ env.IMAGE_NAME }}:${{ env.NEXTDNS_VERSION }}
